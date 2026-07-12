@@ -6,83 +6,38 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-
-    <div class="client-block">
-        <h1>WebSocket Client1</h1>
-        <h2>Connection Status:</h2>
-        <div id="output1"></div>
-        <div id="data-table-container1"></div>
-    </div>
-
-    <div class="client-block">
-        <h1>WebSocket Client2</h1>
-        <h2>Connection Status:</h2>
-        <div id="output2"></div>
-        <div id="data-table-container2"></div>
-    </div>
-
-    <div class="client-block">
-        <h1>WebSocket Client3</h1>
-        <h2>Connection Status:</h2>
-        <div id="output3"></div>
-        <div id="data-table-container3"></div>
-    </div>
-
+    
+    <div id="clients-container"></div>
+    
     <script>
-        const output1 = document.getElementById('output1');
-        const container1 = document.getElementById('data-table-container1');
-
-        const output2 = document.getElementById('output2');
-        const container2 = document.getElementById('data-table-container2');
-
-        const output3 = document.getElementById('output3');
-        const container3 = document.getElementById('data-table-container3');
-
         const reconnectionInterval = 5000;
+        const SCAN_INTERVAL = 3000;
+        const REMOVE_DELAY = 5000;
 
-        function connectWebSocket(url, output, dataTableContainer) {
-            let socket = null;
-            let isConnected = false; 
+        const ports = [8765, 8766, 8767, 8768, 8769, 8770, 8771, 8772, 8773, 8774];
 
-            socket = new WebSocket(url);
+        const sockets = {};
+        const activePorts = {};
+        const removeTimeouts = {};
+        const portData = {};
+        let clientCounter = 0;
 
-            socket.onopen = () => {
-                output.innerHTML += '<p class="open">Соединение установлено</p>';
-                isConnected = true;
-                removeStatusMessage(output, 'close', "Соединение закрыто");
-                removeStatusMessage(output, 'error', "Ошибка:");
-            };
-
-            socket.onmessage = (event) => {
-                try {
-                    const dataArray = JSON.parse(event.data);
-                    updateTable(dataArray, dataTableContainer, isConnected);
-                } catch (e) {
-                    console.error("Ошибка парсинга JSON от сервера:", url, e);
+        function removeStatusMessage(outputElement, className, textContentStart) {
+            const elements = outputElement.querySelectorAll('.' + className);
+            elements.forEach(element => {
+                if (element.textContent.includes(textContentStart) || 
+                    element.textContent.startsWith(textContentStart)) {
+                    element.remove();
                 }
-            };
+            });
+        }
 
-            socket.onclose = () => {
-                output.innerHTML = '<p class="close">Соединение закрыто</p>';
-                removeStatusMessage(output, 'open', "Соединение установлено");
-                isConnected = false;
-                showNoDataMessage(dataTableContainer);
-                
-                setTimeout(() => {
-                    console.log(`Попытка переподключения к ${url}...`);
-                    connectWebSocket(url, output, dataTableContainer);
-                }, reconnectionInterval);
-            };
-
-            socket.onerror = (error) => {
-                console.error(`Ошибка сокета на ${url}:`, error);
-                isConnected = false;
-                showNoDataMessage(dataTableContainer);
-            };
+        function showNoDataMessage(dataTableContainer) {
+            dataTableContainer.innerHTML = '<p class="noData">Нет данных для отображения</p>';
         }
 
         function updateTable(dataArray, dataTableContainer, isConnected) {
-            if (!isConnected || !dataArray || dataArray.length === 0) {
+            if (!dataArray || dataArray.length === 0) {
                  showNoDataMessage(dataTableContainer);
                  return;
             }
@@ -125,7 +80,6 @@
                 tableHTML += `
                     <tr>
                         <td>${key}</td>
-                        <!--<td>${decodedValue}</td>-->
                         <td>${data.value}</td>
                         <td>${createIndex}</td>
                     </tr>
@@ -148,22 +102,237 @@
             }
         }
 
-        function showNoDataMessage(dataTableContainer) {
-            dataTableContainer.innerHTML = '<p class="noData">Нет данных для отображения</p>';
-        }
-
-        function removeStatusMessage(outputElement, className, textContentStart) {
-            const elements = outputElement.querySelectorAll('.' + className);
-            elements.forEach(element => {
-                if (element.textContent.startsWith(textContentStart)) {
-                    element.remove();
+        function createClientBlock(port) {
+            const container = document.getElementById('clients-container');
+            
+            if (document.getElementById(`block-${port}`)) {
+                return;
+            }
+            
+            if (removeTimeouts[port]) {
+                clearTimeout(removeTimeouts[port]);
+                delete removeTimeouts[port];
+            }
+            
+            clientCounter++;
+            const block = document.createElement('div');
+            block.className = 'client-block';
+            block.id = `block-${port}`;
+            block.innerHTML = `
+                <h1>WebSocket Client${clientCounter}</h1>
+                <h2>Connection Status:</h2>
+                <div id="output-${port}"></div>
+                <div id="data-table-container-${port}"></div>
+            `;
+            container.appendChild(block);
+            
+            activePorts[port] = true;
+            
+            if (portData[port]) {
+                const container = document.getElementById(`data-table-container-${port}`);
+                if (container) {
+                    updateTable(portData[port], container, true);
                 }
-            });
+            }
         }
 
-        connectWebSocket('ws://localhost:8765', output1, container1);
-        connectWebSocket('ws://localhost:8766', output2, container2);
-        connectWebSocket('ws://localhost:8767', output3, container3);
+        function scheduleRemoveClientBlock(port) {
+            if (removeTimeouts[port]) {
+                return;
+            }
+            
+            const output = document.getElementById(`output-${port}`);
+            if (output) {
+                removeStatusMessage(output, 'close', "Соединение закрыто");
+                removeStatusMessage(output, 'open', "Соединение установлено");
+                removeStatusMessage(output, 'close', "Попытка переподключения...");
+                output.innerHTML += '<p class="close">Попытка переподключения...</p>';
+            }
+            
+            removeTimeouts[port] = setTimeout(() => {
+                if (sockets[port] && sockets[port].readyState === WebSocket.OPEN) {
+                    delete removeTimeouts[port];
+                    const output = document.getElementById(`output-${port}`);
+                    if (output) {
+                        removeStatusMessage(output, 'close', "Попытка переподключения...");
+                        output.innerHTML += '<p class="open">Соединение восстановлено</p>';
+                    }
+                    return;
+                }
+                
+                const block = document.getElementById(`block-${port}`);
+                if (block) {
+                    block.remove();
+                    delete activePorts[port];
+                    delete removeTimeouts[port];
+                    
+                    clientCounter = 0;
+                    document.querySelectorAll('.client-block').forEach((el, index) => {
+                        const h1 = el.querySelector('h1');
+                        if (h1) {
+                            h1.textContent = `WebSocket Client${index + 1}`;
+                        }
+                        clientCounter = index + 1;
+                    });
+                }
+            }, REMOVE_DELAY);
+        }
+
+        function checkPort(port) {
+            const url = `ws://localhost:${port}`;
+            
+            if (sockets[port] && sockets[port].readyState === WebSocket.OPEN) {
+                return;
+            }
+
+            if (removeTimeouts[port]) {
+                tryConnect(port);
+                return;
+            }
+
+            if (activePorts[port] && (!sockets[port] || sockets[port].readyState === WebSocket.CLOSED)) {
+                connectWebSocket(port);
+                return;
+            }
+
+            tryConnect(port);
+        }
+
+        function tryConnect(port) {
+            const url = `ws://localhost:${port}`;
+            
+            try {
+                const testSocket = new WebSocket(url);
+                let connected = false;
+
+                const timeout = setTimeout(() => {
+                    if (!connected) {
+                        testSocket.close();
+                        if (activePorts[port] && !removeTimeouts[port]) {
+                            scheduleRemoveClientBlock(port);
+                        }
+                    }
+                }, 1000);
+
+                testSocket.onopen = () => {
+                    connected = true;
+                    clearTimeout(timeout);
+                    if (!activePorts[port]) {
+                        createClientBlock(port);
+                    }
+                    testSocket.close();
+                    connectWebSocket(port);
+                };
+
+                testSocket.onerror = () => {
+                    clearTimeout(timeout);
+                    if (activePorts[port] && !removeTimeouts[port]) {
+                        scheduleRemoveClientBlock(port);
+                    }
+                };
+
+                testSocket.onclose = () => {
+                    clearTimeout(timeout);
+                    if (!connected && activePorts[port] && !removeTimeouts[port]) {
+                        scheduleRemoveClientBlock(port);
+                    }
+                };
+
+            } catch (e) {
+                if (activePorts[port] && !removeTimeouts[port]) {
+                    scheduleRemoveClientBlock(port);
+                }
+            }
+        }
+
+        function connectWebSocket(port) {
+            if (!activePorts[port]) {
+                createClientBlock(port);
+            }
+
+            if (removeTimeouts[port]) {
+                clearTimeout(removeTimeouts[port]);
+                delete removeTimeouts[port];
+            }
+
+            const url = `ws://localhost:${port}`;
+            const output = document.getElementById(`output-${port}`);
+            const dataTableContainer = document.getElementById(`data-table-container-${port}`);
+            
+            if (!output || !dataTableContainer) {
+                return;
+            }
+
+            if (sockets[port]) {
+                try {
+                    sockets[port].close();
+                } catch(e) {}
+                delete sockets[port];
+            }
+
+            let socket = null;
+            let isConnected = false; 
+
+            socket = new WebSocket(url);
+            sockets[port] = socket;
+
+            socket.onopen = () => {
+                removeStatusMessage(output, 'close', "Попытка переподключения...");
+                output.innerHTML += '<p class="open">Соединение установлено</p>';
+                isConnected = true;
+                removeStatusMessage(output, 'close', "Соединение закрыто");
+                removeStatusMessage(output, 'error', "Ошибка:");
+                
+                if (portData[port]) {
+                    updateTable(portData[port], dataTableContainer, true);
+                }
+            };
+
+            socket.onmessage = (event) => {
+                try {
+                    const dataArray = JSON.parse(event.data);
+                    portData[port] = dataArray;
+                    updateTable(dataArray, dataTableContainer, isConnected);
+                } catch (e) {
+                    console.error("Ошибка парсинга JSON от сервера:", url, e);
+                }
+            };
+
+            socket.onclose = () => {
+                output.innerHTML += '<p class="close">Соединение закрыто</p>';
+                removeStatusMessage(output, 'open', "Соединение установлено");
+                removeStatusMessage(output, 'close', "Попытка переподключения...");
+                isConnected = false;
+                delete sockets[port];
+                
+                scheduleRemoveClientBlock(port);
+            };
+
+            socket.onerror = (error) => {
+                console.error(`Ошибка сокета на ${url}:`, error);
+                isConnected = false;
+                scheduleRemoveClientBlock(port);
+            };
+        }
+
+        function scanPorts() {
+            for (let i = 0; i < ports.length; i++) {
+                const port = ports[i];
+                checkPort(port);
+            }
+        }
+
+        scanPorts();
+        setInterval(scanPorts, SCAN_INTERVAL);
+
+        window.addEventListener('beforeunload', () => {
+            Object.values(sockets).forEach(socket => {
+                try { socket.close(); } catch(e) {}
+            });
+            Object.values(removeTimeouts).forEach(timeout => {
+                clearTimeout(timeout);
+            });
+        });
     </script>
 </body>
 </html>
