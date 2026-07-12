@@ -86,6 +86,7 @@ function buildMenu(services) {
     });
 }
 
+// Обработчик отключения сервиса-регистратора
 function handleRegistryCrash() {
     cleanupCurrentView();
     document.getElementById('page-title').innerText = "Системная ошибка";

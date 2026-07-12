@@ -14,7 +14,6 @@ SERVICE_META = {
     "ws_url": f"ws://localhost:{PORT}/ws"
 }
 
-
 async def keep_registry_connection():
     uri = "ws://127.0.0.1:8000/ws/backend"
     while True:
