@@ -11,7 +11,7 @@ SERVICE_META = {
     "path": "/charts",
     "name": "Прогноз температуры в Москве",
     "icon": "fa-cloud-sun",
-    "ws_url": f"ws://localhost:{PORT}/ws"
+    "ws_url": f"ws://153.80.245.239:{PORT}/ws"
 }
 
 async def keep_registry_connection():
@@ -82,4 +82,4 @@ async def websocket_endpoint(websocket: FastWebSocket):
 if __name__ == "__main__":
     import uvicorn
 
-    uvicorn.run(app, host="127.0.0.1", port=PORT)
+    uvicorn.run(app, host="0.0.0.0", port=PORT)

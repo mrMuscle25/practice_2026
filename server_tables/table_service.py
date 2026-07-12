@@ -11,7 +11,7 @@ SERVICE_META = {
     "path": "/tables",
     "name": "Таблица измерений",
     "icon": "fa-table",
-    "ws_url": f"ws://localhost:{PORT}/ws"
+    "ws_url": f"ws://153.80.245.239:{PORT}/ws"
 }
 
 async def keep_registry_connection():
@@ -51,4 +51,4 @@ async def startup_event():
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="127.0.0.1", port=PORT)
+    uvicorn.run(app, host="0.0.0.0", port=PORT)

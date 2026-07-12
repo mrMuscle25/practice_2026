@@ -7,7 +7,7 @@ SERVICE_META = {
     "path": "/consul-3",
     "name": "Consul 3",
     "icon": "fa-server",
-    "ws_url": f"ws://localhost:{PORT}"
+    "ws_url": f"ws://153.80.245.239:{PORT}"
 }
 
 
@@ -42,7 +42,7 @@ def parse_json():
 
 
 async def keep_registry_connection():
-    uri = "ws://127.0.0.1:8000/ws/backend"
+    uri = "ws://153.80.245.239:8000/ws/backend"
     while True:
         try:
             async with websockets.connect(uri) as websocket:
@@ -74,7 +74,7 @@ async def handle_client(websocket):
 async def main():
     asyncio.create_task(keep_registry_connection())
 
-    async with websockets.serve(handle_client, "localhost", PORT):
+    async with websockets.serve(handle_client, "0.0.0.0", PORT):
         print(f"WebSocket сервер запущен на ws://localhost:{PORT}")
         await asyncio.Future()
 

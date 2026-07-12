@@ -1,4 +1,4 @@
-const REGISTRY_WS_URL = 'ws://localhost:8000/ws/registry';
+const REGISTRY_WS_URL = 'ws://153.80.245.239:8000/ws/registry';
 
 let routingMap = [];
 let registrySocket = null;
