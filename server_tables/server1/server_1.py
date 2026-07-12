@@ -2,10 +2,20 @@ import asyncio
 import websockets
 import json
 
+PORT = 8765
+SERVICE_META = {
+    "path": "/consul-1",
+    "name": "Consul 1",
+    "icon": "fa-server",
+    "ws_url": f"ws://localhost:{PORT}"
+}
+
+
 def open_file():
     with open("consulData.js", "r") as file:
         data = file.read()
     return data
+
 
 def extract_list():
     data = open_file()
@@ -17,6 +27,7 @@ def extract_list():
         list = json.loads(list_str)
     return list
 
+
 def parse_json():
     data = extract_list()
     messages = []
@@ -25,31 +36,47 @@ def parse_json():
             "key": entry["Key"],
             "value": entry["Value"],
             "createIndex": entry["CreateIndex"]
-            
         }
         messages.append(message_to_send)
     return messages
+
+async def keep_registry_connection():
+    uri = "ws://127.0.0.1:8000/ws/backend"
+    while True:
+        try:
+            async with websockets.connect(uri) as websocket:
+                await websocket.send(json.dumps(SERVICE_META))
+                print(f"[Реестр] Успешно зарегистрирован: {SERVICE_META['name']}")
+                while True:
+                    await websocket.recv()
+        except (websockets.exceptions.ConnectionClosed, ConnectionRefusedError):
+            print("[Реестр] Шлюз недоступен. Повторная попытка через 3 сек...")
+            await asyncio.sleep(3)
+
 
 async def handle_client(websocket):
     try:
         print(f"Новое соединение: {websocket.remote_address}")
 
         messages_to_send = parse_json()
-
         await websocket.send(json.dumps(messages_to_send))
-        await asyncio.sleep(5)
 
-    except websockets.exceptions.ConnectionClosedError:
+        while True:
+            await asyncio.sleep(3600)
+
+    except websockets.exceptions.ConnectionClosed:
         print(f"Соединение с клиентом разорвано")
     except Exception as e:
         print(f"Ошибка: {e}")
-    finally:
-        print(f"Соединение закрыто: {websocket.remote_address}")
+
 
 async def main():
-    server = await websockets.serve(handle_client, "localhost", 8767)
-    print("WebSocket сервер запущен на ws://localhost:8767")
-    await server.wait_closed()
+    asyncio.create_task(keep_registry_connection())
+
+    async with websockets.serve(handle_client, "localhost", PORT):
+        print(f"WebSocket сервер запущен на ws://localhost:{PORT}")
+        await asyncio.Future()
+
 
 if __name__ == "__main__":
     asyncio.run(main())
