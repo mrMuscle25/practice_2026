@@ -1,27 +1,27 @@
 const consul = [
      {
-          "CreateIndex": 1234567,
-          "Key": "speedometer1",
-          "Value": "120"
+          "equipment_id": "pressure_gauge1",
+          "Time": 0.2,
+          "Value": 1
      },
      {
-          "CreateIndex": 2345678,
-          "Key": "speedometer2",
-          "Value": "130"
+          "equipment_id": "pressure_gauge1",
+          "Time": 0.4,
+          "Value": 1
      },
      {
-          "CreateIndex": 3456789,
-          "Key": "speedometer3",
-          "Value": "15"
+          "equipment_id": "pressure_gauge1",
+          "Time": 0.6,
+          "Value": 0.9
      },
      {
-          "CreateIndex": 4567890,
-          "Key": "speedometer4",
-          "Value": "16"
+          "equipment_id": "pressure_gauge1",
+          "Time": 0.8,
+          "Value": 0.8
      },
      {
-          "CreateIndex": 5678901,
-          "Key": "speedometer5",
-          "Value": "80"
+          "equipment_id": "pressure_gauge1",
+          "Time": 1.0,
+          "Value": 0.8
      }
 ]

@@ -34,10 +34,12 @@ async def handle_client(websocket):
     try:
         print(f"Новое соединение: {websocket.remote_address}")
 
-        messages_to_send = parse_json()
+        while True:
+            messages_to_send = parse_json()
+            await websocket.send(json.dumps(messages_to_send))
+            print(f"Отправлены данные клиенту {websocket.remote_address}")
 
-        await websocket.send(json.dumps(messages_to_send))
-        await asyncio.sleep(5)
+            await asyncio.sleep(2)
 
     except websockets.exceptions.ConnectionClosedError:
         print(f"Соединение с клиентом разорвано")
