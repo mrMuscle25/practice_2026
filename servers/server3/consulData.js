@@ -1,27 +1,27 @@
 const consul = [
      {
-          "CreateIndex": 1234567,
-          "Key": "pressure_gauge1",
-          "Value": "17"
+          "equipment_id": "pressure_gauge2",
+          "Time": 0.6,
+          "Value": 40
      },
      {
-          "CreateIndex": 2345678,
-          "Key": "pressure_gauge2",
-          "Value": "105"
+          "equipment_id": "pressure_gauge2",
+          "Time": 0.6,
+          "Value": 42
      },
      {
-          "CreateIndex": 3456789,
-          "Key": "pressure_gauge3",
-          "Value": "103"
+          "equipment_id": "pressure_gauge2",
+          "Time": 0.6,
+          "Value": 42
      },
      {
-          "CreateIndex": 4567890,
-          "Key": "pressure_gauge4",
-          "Value": "99"
+          "equipment_id": "pressure_gauge2",
+          "Time": 0.6,
+          "Value": 44
      },
      {
-          "CreateIndex": 5678901,
-          "Key": "pressure_gauge5",
-          "Value": "87"
+          "equipment_id": "pressure_gauge2",
+          "Time": 0.6,
+          "Value": 46
      }
 ]

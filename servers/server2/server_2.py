@@ -22,9 +22,9 @@ def parse_json():
     messages = []
     for entry in data:
         message_to_send = {
-            "key": entry["Key"],
+            "equipment_id": entry["equipment_id"],
             "value": entry["Value"],
-            "createIndex": entry["CreateIndex"]
+            "Time": entry["Time"]
             
         }
         messages.append(message_to_send)
