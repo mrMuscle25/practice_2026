@@ -157,7 +157,7 @@ function mountChildService(service) {
                 container.innerHTML = `<canvas id="chart-canvas"></canvas>`;
                 const ctx = document.getElementById('chart-canvas').getContext('2d');
                 currentChartInstance = new Chart(ctx, {
-                    type: 'bar',
+                    type: 'bubble',
                     data: {
                         labels: data.labels,
                         datasets: [{ label: data.title, data: data.values, backgroundColor: '#38bdf8' }]

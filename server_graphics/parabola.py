@@ -8,8 +8,8 @@ PORT =8001
 
 PARABOLA_META = {
     "path": "/charts",
-    "name": "График параблоической фун-ии",
-    "icon": "fa-cloud-sun",
+    "name": "График параболической фун-ии",
+    "icon": "fa-line-chart",
     "ws_url": f"ws://localhost:{PORT}/ws"
 }
 
@@ -45,7 +45,7 @@ async def generate_data(app_data, stop):
         current += step
         app_data.state.parabola_x = x
         app_data.state.parabola_y = y
-        await asyncio.sleep(3)
+        await asyncio.sleep(1)
 
     
 @asynccontextmanager
