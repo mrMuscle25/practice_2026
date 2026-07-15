@@ -1,27 +1,27 @@
 const consul = [
      {
-          "CreateIndex": 1234567,
-          "Key": "thermometer1",
-          "Value": "16°"
+          "equipment_id": "thermometer1",
+          "Time": 0.2,
+          "Value": 500
      },
      {
-          "CreateIndex": 2345678,
-          "Key": "thermometer2",
-          "Value": "21°"
+          "equipment_id": "thermometer1",
+          "Time": 0.4,
+          "Value": 509
      },
      {
-          "CreateIndex": 3456789,
-          "Key": "thermometer",
-          "Value": "11°"
+          "equipment_id": "thermometer1",
+          "Time": 0.6,
+          "Value": 520
      },
      {
-          "CreateIndex": 4567890,
-          "Key": "thermometer4",
-          "Value": "14°"
+          "equipment_id": "thermometer1",
+          "Time": 0.8,
+          "Value": 520
      },
      {
-          "CreateIndex": 5678901,
-          "Key": "thermometer5",
-          "Value": "14°"
+          "equipment_id": "thermometer1",
+          "Time": 1.0,
+          "Value": 525
      }
 ]
