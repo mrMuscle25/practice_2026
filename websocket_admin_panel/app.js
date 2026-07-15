@@ -6,6 +6,13 @@ let currentWebSocket = null;
 let currentChartInstance = null;
 let isRegistryOnline = false;
 
+let threeScene = null;
+let threeCamera = null;
+let threeRenderer = null;
+let threeControls = null;
+let threeMesh = null;
+let threeAnimationId = null;
+
 function init() {
     window.addEventListener('hashchange', router);
     connectToRegistry();
@@ -141,6 +148,18 @@ function cleanupCurrentView() {
         currentChartInstance.destroy();
         currentChartInstance = null;
     }
+    if (threeAnimationId) {
+        cancelAnimationFrame(threeAnimationId);
+        threeAnimationId = null;
+    }
+    if (threeRenderer) {
+        threeRenderer.dispose();
+        threeRenderer = null;
+    }
+    threeScene = null;
+    threeCamera = null;
+    threeControls = null;
+    threeMesh = null;
 }
 
 function mountChildService(service) {
@@ -151,7 +170,113 @@ function mountChildService(service) {
         if (!isRegistryOnline) return;
         const data = JSON.parse(event.data);
 
-        // Графики
+        // 3D-графики
+        if (service.type === "3d_chart" || (data.x && data.y && data.z)) {
+            if (!threeScene) {
+                container.style.position = "relative";
+                container.innerHTML = `
+                    <div id="threejs-canvas-container" style="flex-grow: 1; width: 100%; height: 100%; min-height: 500px;"></div>
+                `;
+
+                const canvasContainer = document.getElementById('threejs-canvas-container');
+                const width = canvasContainer.clientWidth;
+                const height = canvasContainer.clientHeight;
+
+                threeScene = new THREE.Scene();
+                threeScene.background = new THREE.Color(0x1e293b);
+
+                threeCamera = new THREE.PerspectiveCamera(45, width / height, 0.1, 1000);
+                threeCamera.position.set(25, 20, 25);
+
+                threeRenderer = new THREE.WebGLRenderer({ antialias: true });
+                threeRenderer.setSize(width, height);
+                canvasContainer.appendChild(threeRenderer.domElement);
+
+                threeControls = new THREE.OrbitControls(threeCamera, threeRenderer.domElement);
+                threeControls.enableDamping = true;
+                threeControls.dampingFactor = 0.05;
+
+                // Освещение
+                const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+                threeScene.add(ambientLight);
+
+                const dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
+                dirLight.position.set(10, 20, 10);
+                threeScene.add(dirLight);
+
+                // Координатные оси и сетка пола
+                const axesHelper = new THREE.AxesHelper(12);
+                axesHelper.position.y = -5.05;
+                threeScene.add(axesHelper);
+
+                const gridHelper = new THREE.GridHelper(30, 15, 0x475569, 0x334155);
+                gridHelper.position.y = -5.1;
+                threeScene.add(gridHelper);
+
+                const animate = () => {
+                    if (!threeScene) return;
+                    threeAnimationId = requestAnimationFrame(animate);
+                    threeControls.update();
+                    threeRenderer.render(threeScene, threeCamera);
+                };
+                animate();
+
+                window.addEventListener('resize', () => {
+                    if (!threeRenderer || !canvasContainer) return;
+                    const w = canvasContainer.clientWidth;
+                    const h = canvasContainer.clientHeight;
+                    threeCamera.aspect = w / h;
+                    threeCamera.updateProjectionMatrix();
+                    threeRenderer.setSize(w, h);
+                });
+            }
+
+            const resolution = data.x.length;
+            const geometry = new THREE.PlaneGeometry(20, 20, resolution - 1, resolution - 1);
+
+            const positions = geometry.attributes.position.array;
+            let index = 0;
+
+            const zMin = data.bounds.z_min;
+            const zMax = data.bounds.z_max;
+            const zRange = (zMax - zMin) || 1.0;
+            const scaleZ = 8.0;
+
+            for (let i = 0; i < resolution; i++) {
+                for (let j = 0; j < resolution; j++) {
+                    const x_val = ((i / (resolution - 1)) - 0.5) * 20;
+                    const y_val = ((j / (resolution - 1)) - 0.5) * 20;
+
+                    const raw_z = data.z[i][j];
+                    const normalized_z = ((raw_z - zMin) / zRange) * scaleZ - (scaleZ / 2);
+
+                    positions[index] = x_val;
+                    positions[index + 1] = y_val;
+                    positions[index + 2] = normalized_z;
+                    index += 3;
+                }
+            }
+
+            geometry.computeVertexNormals();
+
+            const material = new THREE.MeshPhongMaterial({
+                color: 0x38bdf8,
+                wireframe: true,
+                side: THREE.DoubleSide,
+                flatShading: true
+            });
+
+            if (threeMesh) {
+                threeScene.remove(threeMesh);
+                threeMesh.geometry.dispose();
+            }
+
+            threeMesh = new THREE.Mesh(geometry, material);
+            threeMesh.rotation.x = -Math.PI / 2;
+            threeScene.add(threeMesh);
+        }
+
+        // 2D-Графики
         if (data.labels && data.values) {
             if (!currentChartInstance) {
                 container.innerHTML = `<canvas id="chart-canvas"></canvas>`;
