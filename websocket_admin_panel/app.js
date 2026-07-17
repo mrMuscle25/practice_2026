@@ -277,22 +277,88 @@ function mountChildService(service) {
         }
 
         // 2D-Графики
-        if (data.labels && data.values) {
+if (data.labels && data.values) {
             if (!currentChartInstance) {
-                container.innerHTML = `<canvas id="chart-canvas"></canvas>`;
+                container.innerHTML = `
+                    <div id="stats-legend" style="
+                        display: none;
+                        flex-wrap: wrap;
+                        gap: 15px;
+                        margin-bottom: 20px;
+                        padding: 15px;
+                        background: #24334d;
+                        border-radius: 8px;
+                        border-left: 4px solid var(--accent);
+                        justify-content: space-around;
+                    "></div>
+                    <div style="flex-grow: 1; position: relative; height: 300px;">
+                        <canvas id="chart-canvas"></canvas>
+                    </div>
+                `;
+
                 const ctx = document.getElementById('chart-canvas').getContext('2d');
                 currentChartInstance = new Chart(ctx, {
-                    type: 'bubble',
+                    type: 'line',
                     data: {
                         labels: data.labels,
-                        datasets: [{ label: data.title, data: data.values, backgroundColor: '#38bdf8' }]
+                        datasets: [{
+                            label: data.title,
+                            data: data.values,
+                            borderColor: '#38bdf8',
+                            backgroundColor: 'rgba(56, 189, 248, 0.1)',
+                            tension: 0.2,
+                            fill: true
+                        }]
                     },
-                    options: { responsive: true, maintainAspectRatio: false }
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                display: false
+                            }
+                        },
+                        scales: {
+                            y: { beginAtZero: false }
+                        }
+                    }
                 });
             } else {
                 currentChartInstance.data.labels = data.labels;
                 currentChartInstance.data.datasets[0].data = data.values;
                 currentChartInstance.update();
+            }
+
+            const legendContainer = document.getElementById('stats-legend');
+            if (legendContainer) {
+                if (data.stats) {
+                    legendContainer.style.display = 'flex';
+                    legendContainer.innerHTML = `
+                        <div style="text-align: center;">
+                            <span style="color: #94a3b8; font-size: 0.8rem; text-transform: uppercase;">Мат. ожидание</span>
+                            <div style="font-size: 1.3rem; font-weight: bold; color: #fff; margin-top: 4px;">${data.stats.mo} °C</div>
+                        </div>
+                        <div style="text-align: center;">
+                            <span style="color: #94a3b8; font-size: 0.8rem; text-transform: uppercase;">СКО</span>
+                            <div style="font-size: 1.3rem; font-weight: bold; color: var(--accent); margin-top: 4px;">${data.stats.sko}</div>
+                        </div>
+                        <div style="text-align: center;">
+                            <span style="color: #94a3b8; font-size: 0.8rem; text-transform: uppercase;">СКЗ</span>
+                            <div style="font-size: 1.3rem; font-weight: bold; color: #a78bfa; margin-top: 4px;">${data.stats.skz}</div>
+                        </div>
+                        <div style="text-align: center;">
+                            <span style="color: #ef4444; font-size: 0.8rem; text-transform: uppercase;">Минимум</span>
+                            <div style="font-size: 1.3rem; font-weight: bold; color: #fca5a5; margin-top: 4px;">${data.stats.min} °C</div>
+                        </div>
+                        <div style="text-align: center;">
+                            <span style="color: #22c55e; font-size: 0.8rem; text-transform: uppercase;">Максимум</span>
+                            <div style="font-size: 1.3rem; font-weight: bold; color: #86efac; margin-top: 4px;">${data.stats.max} °C</div>
+                        </div>
+                    `;
+                } else {
+                    legendContainer.style.display = 'none';
+                    legendContainer.innerHTML = '';
+                }
             }
         }
         // Таблицы
