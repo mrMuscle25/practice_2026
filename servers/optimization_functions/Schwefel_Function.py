@@ -46,7 +46,7 @@ app = FastAPI(
 
 def schwefel(x):
     term = x * np.sin(np.sqrt(np.abs(x)))
-    return np.sum(term, axis=0)
+    return 418.9829 * 2 - term
 
 
 def generate_sin(x_min,x_max, y_min, y_max):
@@ -54,7 +54,7 @@ def generate_sin(x_min,x_max, y_min, y_max):
        x = np.linspace(x_min, x_max, resolution)
        y = np.linspace(y_min, y_max, resolution)
        X, Y = np.meshgrid(x, y)
-       Z = 418.9829 * 2 - schwefel(X) + schwefel(Y)
+       Z = schwefel(X) + schwefel(Y)
        return {
            "x": X.tolist(),
            "y": Y.tolist(),
