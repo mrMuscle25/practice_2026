@@ -1,7 +1,6 @@
 import asyncio
 import json
 import logging
-import time
 from contextlib import asynccontextmanager
 import numpy as np
 from fastapi import FastAPI, WebSocket as FastWebSocket, WebSocketDisconnect
@@ -10,18 +9,18 @@ import websockets
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("3d-sin")
 
-PORT = 8005
+PORT = 8006
 
 SERVICE_METADATA = {
-    "name": "3d-синусоида",
-    "path": "/3d-visualizer",
+    "name": "3d-функция Растригина",
+    "path": "/3d-visualizer_2",
     "icon": "fa-cube",
     "ws_url": f"ws://localhost:{PORT}/ws",
     "type": "3d_chart"
 }
 
 async def keep_registry_connection():
-    uri = "ws://127.0.0.1:8000/ws/backend"
+    uri = "ws://localhost:8000/ws/backend"
     while True:
         try:
             async with websockets.connect(uri) as websocket:
@@ -45,30 +44,26 @@ app = FastAPI(
     lifespan=lifespan
 )
 
+def rastring(x):
+    term = x **2- 10* np.cos(2*x*(np.pi))
+    return 10 + term
 
-def generate_sin(t: float, resolution: int = 40):
 
-    x_min, x_max = -10.0, 10.0
-    y_min, y_max = -10.0, 10.0
-
-    x = np.linspace(x_min, x_max, resolution)
-    y = np.linspace(y_min, y_max, resolution)
-    X, Y = np.meshgrid(x, y)
-
-    R = np.sqrt(X**2 + Y**2)
-    Z = np.sin(R - t * 2.0) * 2.5
-
-    return {
-        "function": "sin",
-        "x": X.tolist(),
-        "y": Y.tolist(),
-        "z": Z.tolist(),
-        "bounds": {
-            "x_min": float(np.min(X)), "x_max": float(np.max(X)),
-            "y_min": float(np.min(Y)), "y_max": float(np.max(Y)),
-            "z_min": float(np.min(Z)), "z_max": float(np.max(Z))
-        },
-        "t": t
+def generate_sin(x_min,x_max, y_min, y_max):
+       resolution=100
+       x = np.linspace(x_min, x_max, resolution)
+       y = np.linspace(y_min, y_max, resolution)
+       X, Y = np.meshgrid(x, y)
+       Z = rastring(X) + rastring(Y)
+       return {
+           "x": X.tolist(),
+           "y": Y.tolist(),
+           "z": Z.tolist(),
+           "bounds": {
+               "x_min": float(np.min(X)), "x_max": float(np.max(X)),
+               "y_min": float(np.min(Y)), "y_max": float(np.max(Y)),
+               "z_min": float(np.min(Z)), "z_max": float(np.max(Z))
+        }
     }
 
 
@@ -96,14 +91,17 @@ async def websocket_endpoint(websocket: FastWebSocket):
             state["active"] = False
 
     asyncio.create_task(receive_commands())
-
-    start_time = time.time()
     try:
         while state["active"]:
-            t = time.time() - start_time
-            response_data = generate_sin(t, state["resolution"])
-            await websocket.send_json(response_data)
-            await asyncio.sleep(0.05)
+            for i in range(-6, 6):
+                for j in range(-6, 6):
+                    response_data = generate_sin(i, i+10.24, j, j+10.24)
+                    await websocket.send_json(response_data)
+                    await asyncio.sleep(0.05)
+                for j in range(6, -6, -1):
+                    response_data = generate_sin(i, i+10.24, j, j+10.24)
+                    await websocket.send_json(response_data)
+                    await asyncio.sleep(0.05)
     except WebSocketDisconnect:
         logger.info("Клиент отключился")
     finally:

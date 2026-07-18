@@ -12,8 +12,8 @@ logger = logging.getLogger("3d-sin")
 PORT = 8005
 
 SERVICE_METADATA = {
-    "name": "3d-функция Растринга",
-    "path": "/3d-visualizer",
+    "name": "3d-функция Букина №6",
+    "path": "/3d-visualizer_5",
     "icon": "fa-cube",
     "ws_url": f"ws://localhost:{PORT}/ws",
     "type": "3d_chart"
@@ -44,17 +44,13 @@ app = FastAPI(
     lifespan=lifespan
 )
 
-def rastring(x):
-    term = x **2- 10* np.cos(2*x*(np.pi))
-    return 10 + term
-
 
 def generate_sin(x_min,x_max, y_min, y_max):
        resolution=100
        x = np.linspace(x_min, x_max, resolution)
        y = np.linspace(y_min, y_max, resolution)
        X, Y = np.meshgrid(x, y)
-       Z = rastring(X) + rastring(Y)
+       Z = 100*np.sqrt(np.abs(Y-0.01*X**2))+0.01*np.abs(X+10)
        return {
            "x": X.tolist(),
            "y": Y.tolist(),
@@ -64,7 +60,7 @@ def generate_sin(x_min,x_max, y_min, y_max):
                "y_min": float(np.min(Y)), "y_max": float(np.max(Y)),
                "z_min": float(np.min(Z)), "z_max": float(np.max(Z))
         }
-    }
+       }
 
 
 @app.websocket("/ws")
@@ -93,15 +89,14 @@ async def websocket_endpoint(websocket: FastWebSocket):
     asyncio.create_task(receive_commands())
     try:
         while state["active"]:
-            for i in range(-6, 6):
-                for j in range(-6, 6):
-                    response_data = generate_sin(i, i+10.24, j, j+10.24)
-                    await websocket.send_json(response_data)
-                    await asyncio.sleep(0.05)
-                for j in range(6, -6, -1):
-                    response_data = generate_sin(i, i+10.24, j, j+10.24)
-                    await websocket.send_json(response_data)
-                    await asyncio.sleep(0.05)
+            for j in range(-25, -5):
+                response_data = generate_sin(j, j+10, -3 , 3)
+                await websocket.send_json(response_data)
+                await asyncio.sleep(0.05)
+            for j in range(-5, -25, -1):
+                response_data = generate_sin(j, j+10, -3 , 3)
+                await websocket.send_json(response_data)
+                await asyncio.sleep(0.05)
     except WebSocketDisconnect:
         logger.info("Клиент отключился")
     finally:

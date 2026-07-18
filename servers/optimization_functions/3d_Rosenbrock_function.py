@@ -9,11 +9,11 @@ import websockets
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("3d-sin")
 
-PORT = 8005
+PORT = 8007
 
 SERVICE_METADATA = {
-    "name": "3d-функция Букинга 6",
-    "path": "/3d-visualizer",
+    "name": "3d-функция Розенброка",
+    "path": "/3d-visualizer_3",
     "icon": "fa-cube",
     "ws_url": f"ws://localhost:{PORT}/ws",
     "type": "3d_chart"
@@ -45,13 +45,19 @@ app = FastAPI(
 )
 
 
-def generate_sin(x_min,x_max, y_min, y_max):
-       resolution=100
+def generate_sin(a, b):
+       resolution=40
+       x_min, x_max =-1.5,1.5
+       y_min, y_max =-1.5,1.5
        x = np.linspace(x_min, x_max, resolution)
        y = np.linspace(y_min, y_max, resolution)
        X, Y = np.meshgrid(x, y)
-       Z = 100*np.sqrt(np.abs(Y-0.01*X**2))+0.01*np.abs(X+10)
+       Z = (a - X)**2 + b * (Y - X**2)**2
+       # Опционально: обрезаем слишком большие значения для лучшего отображения
+       # Z = np.clip(Z, None, max_z)
        return {
+           "a": a,
+           "b": b,
            "x": X.tolist(),
            "y": Y.tolist(),
            "z": Z.tolist(),
@@ -60,7 +66,7 @@ def generate_sin(x_min,x_max, y_min, y_max):
                "y_min": float(np.min(Y)), "y_max": float(np.max(Y)),
                "z_min": float(np.min(Z)), "z_max": float(np.max(Z))
         }
-       }
+    }
 
 
 @app.websocket("/ws")
@@ -89,14 +95,19 @@ async def websocket_endpoint(websocket: FastWebSocket):
     asyncio.create_task(receive_commands())
     try:
         while state["active"]:
-            for j in range(-25, -5):
-                response_data = generate_sin(j, j+10, -3 , 3)
+            for i in range(1000):
+                a = 0.0 + i * 0.02          # a от 0 до 2
+                b = 10 ** (0.0 + i * 0.02)  # b от 1 до 100 (логарифмически)
+                response_data = generate_sin(a, b)
                 await websocket.send_json(response_data)
-                await asyncio.sleep(0.05)
-            for j in range(-5, -25, -1):
-                response_data = generate_sin(j, j+10, -3 , 3)
+                await asyncio.sleep(0.005)
+            await asyncio.sleep(0.05)
+            for i in range(1000, -1, -1):
+                a = 0.0 + i * 0.02          # a от 0 до 2
+                b = 10 ** (0.0 + i * 0.02)  # b от 1 до 100 (логарифмически)
+                response_data = generate_sin(a, b)
                 await websocket.send_json(response_data)
-                await asyncio.sleep(0.05)
+                await asyncio.sleep(0.005)
     except WebSocketDisconnect:
         logger.info("Клиент отключился")
     finally:
