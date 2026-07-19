@@ -40,8 +40,8 @@ async def generate_data(app_data, stop):
         parabola = a * (current ** 2) + b * current + c
         x.append(current)
         y.append(parabola)
-        x.append(current*(-1))
-        y.append(parabola)
+        #x.append(current*(-1))
+        #y.append(parabola)
         current += step
         app_data.state.parabola_x = x
         app_data.state.parabola_y = y
