@@ -8,6 +8,7 @@ body {
     gap: 40px;
 }
 
+/* Карточка сервиса */
 .client-block {
     width: 100%;
     max-width: 800px;
@@ -57,6 +58,7 @@ h2 {
     margin: 20px 0;
 }
 
+/* Таблицы */
 .table-wrapper {
     max-height: 300px; 
     overflow-y: auto;  
@@ -67,6 +69,7 @@ h2 {
     border: 1px solid #eee;
 }
 
+/*Стилизация самой таблицы и строк*/
 table {
     width: 100%;
     border-collapse: collapse;

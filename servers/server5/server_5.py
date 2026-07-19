@@ -22,9 +22,9 @@ def parse_json():
     messages = []
     for entry in data:
         message_to_send = {
-            "key": entry["Key"],
+            "equipment_id": entry["equipment_id"],
             "value": entry["Value"],
-            "createIndex": entry["CreateIndex"]
+            "Time": entry["Time"]
             
         }
         messages.append(message_to_send)
@@ -34,10 +34,12 @@ async def handle_client(websocket):
     try:
         print(f"Новое соединение: {websocket.remote_address}")
 
-        messages_to_send = parse_json()
+        while True:
+            messages_to_send = parse_json()
+            await websocket.send(json.dumps(messages_to_send))
+            print(f"Отправлены данные клиенту {websocket.remote_address}")
 
-        await websocket.send(json.dumps(messages_to_send))
-        await asyncio.sleep(5)
+            await asyncio.sleep(2)
 
     except websockets.exceptions.ConnectionClosedError:
         print(f"Соединение с клиентом разорвано")
@@ -47,8 +49,8 @@ async def handle_client(websocket):
         print(f"Соединение закрыто: {websocket.remote_address}")
 
 async def main():
-    server = await websockets.serve(handle_client, "localhost", 8766)
-    print("WebSocket сервер запущен на ws://localhost:8766")
+    server = await websockets.serve(handle_client, "localhost", 8769)
+    print("WebSocket сервер запущен на ws://localhost:8765")
     await server.wait_closed()
 
 if __name__ == "__main__":
