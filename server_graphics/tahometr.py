@@ -6,12 +6,12 @@ import math
 import random
 from contextlib import asynccontextmanager
 
-PORT = 8002
+PORT = 8001
 
 # Метаданные (можно переименовать)
 TACHOMETER_META = {
-    "path": "/charts",
-    "name": "График оборотов двигателя (тахометр)",
+    "path": "/charts_1",
+    "name": "График показателей тахометра (обороты двигателя в минуту)",
     "icon": "fa-line-chart",
     "ws_url": f"ws://localhost:{PORT}/ws"
 }
@@ -38,11 +38,11 @@ def compute_stats(data):
     std = math.sqrt(variance)
     rms = math.sqrt(sum(x ** 2 for x in data) / n)
     return {
-        "mo": mean,
-        "sko": std,
-        "skz": rms,
-        "min": min(data),
-        "max": max(data)
+        "mo": round(mean, 3),
+        "sko": round(std, 3),
+        "skz": round(rms, 3),
+        "min": round(min(data), 3),
+        "max": round(max(data), 3)
     }
 
 async def generate_data(app_data, stop):

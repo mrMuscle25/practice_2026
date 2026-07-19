@@ -4,11 +4,11 @@ import websockets
 import asyncio
 from contextlib import asynccontextmanager
 
-PORT =8001
+PORT =8101
 
 PARABOLA_META = {
     "path": "/charts",
-    "name": "График параболической фун-ии",
+    "name": "График параболической функции",
     "icon": "fa-line-chart",
     "ws_url": f"ws://localhost:{PORT}/ws"
 }

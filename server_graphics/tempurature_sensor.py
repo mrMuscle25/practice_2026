@@ -10,8 +10,8 @@ PORT = 8002
 
 
 TEMP_META = {
-    "path": "/charts",
-    "name": "График температуры (двигатель)",
+    "path": "/charts_2",
+    "name": "График температуры в двигателе (°C)",
     "icon": "fa-line-chart",
     "ws_url": f"ws://localhost:{PORT}/ws"
 }
@@ -38,11 +38,11 @@ def compute_stats(data):
     std = math.sqrt(variance)
     rms = math.sqrt(sum(x ** 2 for x in data) / n)
     return {
-        "mo": mean,
-        "sko": std,
-        "skz": rms,
-        "min": min(data),
-        "max": max(data)
+        "mo": round(mean, 3),
+        "sko": round(std, 3),
+        "skz": round(rms, 3),
+        "min": round(min(data), 3),
+        "max": round(max(data), 3)
     }
 
 async def generate_data(app_data, stop):

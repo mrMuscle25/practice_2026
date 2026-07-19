@@ -6,11 +6,11 @@ import math
 import random
 from contextlib import asynccontextmanager
 
-PORT =8002
+PORT =8003
 
 PARABOLA_META = {
-    "path": "/charts",
-    "name": "График показателей воздушного давления.",
+    "path": "/charts_3",
+    "name": "График показателей воздушного давления (Па)",
     "icon": "fa-line-chart",
     "ws_url": f"ws://localhost:{PORT}/ws"
 }
@@ -39,11 +39,11 @@ def compute_stats(data):
     rms = math.sqrt(sum(x ** 2 for x in data) / n)
     
     return {
-        "mo": mean,
-        "sko": std,
-        "skz": rms,
-        "min": min(data),
-        "max": max(data)
+        "mo": round(mean, 3),
+        "sko": round(std, 3),
+        "skz": round(rms, 3),
+        "min": round(min(data), 3),
+        "max": round(max(data), 3)
     }
 
 async def generate_data(app_data, stop):

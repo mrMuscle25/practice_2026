@@ -296,11 +296,11 @@ function mountChildService(service) {
             if (legendContainer && data.stats) {
                 legendContainer.style.display = 'flex';
                 legendContainer.innerHTML = `
-                    <div style="text-align: center;"><span style="color: #94a3b8; font-size: 0.8rem;">Мат. ожидание</span><div style="font-size: 1.3rem; font-weight: bold; color: #fff;">${data.stats.mo} °C</div></div>
+                    <div style="text-align: center;"><span style="color: #94a3b8; font-size: 0.8rem;">Мат. ожидание</span><div style="font-size: 1.3rem; font-weight: bold; color: #fff;">${data.stats.mo}</div></div>
                     <div style="text-align: center;"><span style="color: #94a3b8; font-size: 0.8rem;">СКО</span><div style="font-size: 1.3rem; font-weight: bold; color: var(--accent);">${data.stats.sko}</div></div>
                     <div style="text-align: center;"><span style="color: #94a3b8; font-size: 0.8rem;">СКЗ</span><div style="font-size: 1.3rem; font-weight: bold; color: #a855f7;">${data.stats.skz}</div></div>
-                    <div style="text-align: center;"><span style="color: #ef4444; font-size: 0.8rem;">Минимум</span><div style="font-size: 1.3rem; font-weight: bold; color: #fca5a5;">${data.stats.min} °C</div></div>
-                    <div style="text-align: center;"><span style="color: #22c55e; font-size: 0.8rem;">Максимум</span><div style="font-size: 1.3rem; font-weight: bold; color: #86efac;">${data.stats.max} °C</div></div>
+                    <div style="text-align: center;"><span style="color: #ef4444; font-size: 0.8rem;">Минимум</span><div style="font-size: 1.3rem; font-weight: bold; color: #fca5a5;">${data.stats.min}</div></div>
+                    <div style="text-align: center;"><span style="color: #22c55e; font-size: 0.8rem;">Максимум</span><div style="font-size: 1.3rem; font-weight: bold; color: #86efac;">${data.stats.max}</div></div>
                 `;
             }
         }

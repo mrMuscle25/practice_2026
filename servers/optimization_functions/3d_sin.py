@@ -10,7 +10,7 @@ import websockets
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("3d-sin")
 
-PORT = 8009
+PORT = 8509
 
 SERVICE_METADATA = {
     "name": "3d-синусоида",

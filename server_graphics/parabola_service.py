@@ -5,7 +5,7 @@ from fastapi import FastAPI, WebSocket as FastWebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 import websockets
 
-PORT = 8003
+PORT = 8103
 
 PARABOLA_META = {
     "path": "/dynamic_parabola_2",

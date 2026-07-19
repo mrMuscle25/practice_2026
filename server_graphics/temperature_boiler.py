@@ -7,11 +7,11 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI, WebSocket as FastWebSocket, WebSocketDisconnect
 import websockets
 
-PORT = 8002
+PORT = 8102
 
 SENSOR_META = {
     "path": "/boiler-sensor",
-    "name": "Датчик температуры бойлера",
+    "name": "Датчик температуры бойлера (°C)",
     "icon": "fa-thermometer-half",
     "ws_url": f"ws://localhost:{PORT}/ws"
 }

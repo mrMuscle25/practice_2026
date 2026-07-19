@@ -9,7 +9,7 @@ import websockets
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("3d-sin")
 
-PORT = 8008
+PORT = 8508
 
 SERVICE_METADATA = {
     "name": "3d-функция Швефеля",
