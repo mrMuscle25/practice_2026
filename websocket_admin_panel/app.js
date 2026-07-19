@@ -30,6 +30,10 @@ let threeControls = null;
 let threeMesh = null;
 let threeAnimationId = null;
 
+let threePathPoints = [];
+let threeLine = null;
+let threeDot = null;
+
 function init() {
     window.addEventListener('hashchange', router);
     connectToRegistry();
@@ -168,6 +172,13 @@ function cleanupCurrentView() {
         threeRenderer.dispose();
         threeRenderer = null;
     }
+
+    if (threeLine && threeScene) threeScene.remove(threeLine);
+    if (threeDot && threeScene) threeScene.remove(threeDot);
+    threePathPoints = [];
+    threeLine = null;
+    threeDot = null;
+
     threeScene = null;
     threeCamera = null;
     threeControls = null;
@@ -187,7 +198,157 @@ function mountChildService(service) {
             return;
         }
 
-        // 3D-графики (Three.js)
+if (service.type === "newton_3d" || data.event === "step" || data.event === "finished") {
+            if (!threeScene) {
+                threePathPoints = [];
+                container.style.position = "relative";
+                container.innerHTML = `
+                    <div style="display: flex; flex-direction: column; gap: 15px; height: 100%;">
+                        <div style="display: flex; justify-content: flex-start; align-items: center; gap: 20px; padding: 10px 0;">
+                            <button id="start-newton-3d-btn" style="padding: 10px 20px; background: #0284c7; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; transition: 0.2s;">
+                                <i class="fa-solid fa-play"></i> Запустить 3D спуск
+                            </button>
+                            <button id="stop-newton-3d-btn" style="padding: 10px 20px; background: #dc3545; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; transition: 0.2s; display:none;">
+                                <i class="fa-solid fa-stop"></i> Стоп
+                            </button>
+                            <div id="newton-3d-status" style="color: #94a3b8; font-size: 0.95rem;">Готов к запуску</div>
+                        </div>
+                        <div id="threejs-canvas-container" style="flex-grow: 1; width: 100%; height: 100%; min-height: 450px;"></div>
+                    </div>
+                `;
+
+                document.getElementById('start-newton-3d-btn').addEventListener('click', () => {
+                    if (currentWebSocket && currentWebSocket.readyState === WebSocket.OPEN) {
+                        if (threeLine) threeScene.remove(threeLine);
+                        if (threeDot) threeScene.remove(threeDot);
+                        threePathPoints = [];
+                        threeLine = null;
+                        threeDot = null;
+
+                        const randomX = (Math.random() * 10) - 5;
+                        const randomY = (Math.random() * 10) - 5;
+
+                        currentWebSocket.send(JSON.stringify({ action: "start", x: randomX, y: randomY }));
+
+                        document.getElementById('start-newton-3d-btn').style.display = 'none';
+                        document.getElementById('stop-newton-3d-btn').style.display = 'inline-block';
+                    }
+                });
+
+                document.getElementById('stop-newton-3d-btn').addEventListener('click', () => {
+                    if (currentWebSocket && currentWebSocket.readyState === WebSocket.OPEN) {
+                        currentWebSocket.send(JSON.stringify({ action: "stop" }));
+                        document.getElementById('start-newton-3d-btn').style.display = 'inline-block';
+                        document.getElementById('stop-newton-3d-btn').style.display = 'none';
+                        document.getElementById('newton-3d-status').innerText = "Спуск остановлен пользователем";
+                    }
+                });
+
+                const canvasContainer = document.getElementById('threejs-canvas-container');
+                const width = canvasContainer.clientWidth;
+                const height = canvasContainer.clientHeight;
+
+                threeScene = new THREE.Scene();
+                threeScene.background = new THREE.Color(0x1e293b);
+
+                threeCamera = new THREE.PerspectiveCamera(45, width / height, 0.1, 1000);
+                threeCamera.position.set(15, 15, 20);
+
+                threeRenderer = new THREE.WebGLRenderer({ antialias: true });
+                threeRenderer.setSize(width, height);
+                canvasContainer.appendChild(threeRenderer.domElement);
+
+                threeControls = new THREE.OrbitControls(threeCamera, threeRenderer.domElement);
+                threeControls.enableDamping = true;
+
+                threeScene.add(new THREE.AmbientLight(0xffffff, 0.6));
+                const dirLight = new THREE.DirectionalLight(0xffffff, 0.6);
+                dirLight.position.set(20, 40, 20);
+                threeScene.add(dirLight);
+
+                const gridHelper = new THREE.GridHelper(20, 20, 0x475569, 0x334155);
+                gridHelper.position.y = -0.01;
+                threeScene.add(gridHelper);
+
+                const segments = 60;
+                const surfaceGeo = new THREE.PlaneGeometry(20, 20, segments, segments);
+                surfaceGeo.rotateX(-Math.PI / 2);
+
+                const pos = surfaceGeo.attributes.position;
+                for (let i = 0; i < pos.count; i++) {
+                    const x_val = pos.getX(i);
+                    const z_val = pos.getZ(i);
+
+                    const y_height = 0.1 * (x_val ** 2) + 0.05 * x_val * z_val + 0.06 * (z_val ** 2);
+
+                    pos.setY(i, y_height);
+                }
+                surfaceGeo.computeVertexNormals();
+
+                const surfaceMat = new THREE.MeshStandardMaterial({
+                    color: 0x0284c7,
+                    wireframe: false,
+                    side: THREE.DoubleSide,
+                    roughness: 0.4
+                });
+                threeMesh = new THREE.Mesh(surfaceGeo, surfaceMat);
+                threeScene.add(threeMesh);
+
+                const wireframe = new THREE.LineSegments(
+                    new THREE.WireframeGeometry(surfaceGeo),
+                    new THREE.LineBasicMaterial({ color: 0x000000, opacity: 0.15, transparent: true })
+                );
+                threeScene.add(wireframe);
+
+                const animate = () => {
+                    if (!threeScene) return;
+                    threeAnimationId = requestAnimationFrame(animate);
+                    threeControls.update();
+                    threeRenderer.render(threeScene, threeCamera);
+                };
+                animate();
+            }
+
+            if (data.event === "step") {
+                const statusDiv = document.getElementById('newton-3d-status');
+                if (statusDiv) {
+                    statusDiv.innerHTML = `Шаг спуска: X = <span style="color:#ef4444; font-weight:bold;">${data.x.toFixed(3)}</span>, Y = <span style="color:#ef4444; font-weight:bold;">${data.y.toFixed(3)}</span>, Z = <span style="color:#a855f7; font-weight:bold;">${data.z.toFixed(3)}</span>`;
+                }
+
+                const visualHeight = 0.1 * (data.x ** 2) + 0.05 * data.x * data.y + 0.06 * (data.y ** 2);
+                const newPoint = new THREE.Vector3(data.x, visualHeight, data.y);
+                threePathPoints.push(newPoint);
+
+                if (!threeDot) {
+                    threeDot = new THREE.Mesh(
+                        new THREE.SphereGeometry(0.25, 32, 32),
+                        new THREE.MeshBasicMaterial({ color: 0xff0055 })
+                    );
+                    threeScene.add(threeDot);
+                }
+                threeDot.position.copy(newPoint);
+
+                if (threeLine) threeScene.remove(threeLine);
+                const lineGeo = new THREE.BufferGeometry().setFromPoints(threePathPoints);
+                const lineMat = new THREE.LineBasicMaterial({ color: 0xff3300, linewidth: 3 });
+                threeLine = new THREE.Line(lineGeo, lineMat);
+                threeScene.add(threeLine);
+            }
+
+            if (data.event === "finished") {
+                const statusDiv = document.getElementById('newton-3d-status');
+                if (statusDiv) {
+                    statusDiv.innerHTML = `Минимум найден: X = <span style="color:#22c55e; font-weight:bold;">${data.x.toFixed(3)}</span>, Y = <span style="color:#22c55e; font-weight:bold;">${data.y.toFixed(3)}</span>, Z = <span style="color:#22c55e; font-weight:bold;">${data.z.toFixed(3)}</span>`;
+                }
+
+                document.getElementById('start-newton-3d-btn').style.display = 'inline-block';
+                document.getElementById('stop-newton-3d-btn').style.display = 'none';
+            }
+
+            return;
+        }
+
+        // 3D-графики
         if (service.type === "3d_chart" || (data.x && data.y && data.z)) {
             if (!threeScene) {
                 container.style.position = "relative";
@@ -269,7 +430,111 @@ function mountChildService(service) {
             threeScene.add(threeMesh);
         }
 
-        // 2D-Графики
+        // 2D Ньютон-оптимизация
+        if (service.type === "newton_chart" || data.type === "newton") {
+            if (!currentChartInstance) {
+                container.innerHTML = `
+                    <div style="display: flex; flex-direction: column; gap: 15px; height: 100%;">
+                        <div style="display: flex; justify-content: flex-start; align-items: center; gap: 20px;">
+                            <button id="start-newton-btn" style="padding: 10px 20px; background: #0284c7; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; transition: 0.2s;">
+                                <i class="fa-solid fa-play"></i> Поиск минимума
+                            </button>
+                            <div id="newton-status" style="color: #94a3b8; font-size: 0.95rem;">Готов к запуску</div>
+                        </div>
+                        <div style="flex-grow: 1; position: relative; height: 350px;">
+                            <canvas id="chart-canvas"></canvas>
+                        </div>
+                    </div>
+                `;
+
+                document.getElementById('start-newton-btn').addEventListener('click', () => {
+                    if (currentWebSocket && currentWebSocket.readyState === WebSocket.OPEN) {
+                        currentWebSocket.send(JSON.stringify({ action: "start_optimization" }));
+                    }
+                });
+
+                const ctx = document.getElementById('chart-canvas').getContext('2d');
+                currentChartInstance = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: data.x_base,
+                        datasets: [
+                            {
+                                label: 'График функции f(x)',
+                                data: data.y_base,
+                                borderColor: '#38bdf8',
+                                borderWidth: 2,
+                                pointRadius: 0,
+                                fill: false,
+                                tension: 0.1
+                            },
+                            {
+                                label: 'Шаги метода Ньютона',
+                                data: data.opt_y,
+                                borderColor: '#ef4444',
+                                backgroundColor: '#ef4444',
+                                borderWidth: 2,
+                                pointRadius: 5,
+                                pointHoverRadius: 7,
+                                showLine: true,
+                                fill: false,
+                                type: 'line'
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            x: {
+                                type: 'linear',
+                                position: 'bottom',
+                                grid: { color: 'rgba(255,255,255,0.05)' },
+                                ticks: { color: '#888' }
+                            },
+                            y: {
+                                grid: { color: 'rgba(255,255,255,0.05)' },
+                                ticks: { color: '#888' }
+                            }
+                        }
+                    }
+                });
+            } else {
+                const basePoints = data.x_base.map((x, i) => ({ x: x, y: data.y_base[i] }));
+                const optPoints = data.opt_x.map((x, i) => ({ x: x, y: data.opt_y[i] }));
+
+                currentChartInstance.data.datasets[0].data = basePoints;
+                currentChartInstance.data.datasets[1].data = optPoints;
+                currentChartInstance.update('none');
+
+                const btn = document.getElementById('start-newton-btn');
+                const statusDiv = document.getElementById('newton-status');
+
+                if (btn && statusDiv) {
+                    if (data.is_running) {
+                        btn.disabled = true;
+                        btn.style.background = '#334155';
+                        btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Вычисление...`;
+                        if (data.current_x !== null) {
+                            statusDiv.innerHTML = `Текущая точка: X = <span style="color:#ef4444; font-weight:bold;">${data.current_x.toFixed(4)}</span>`;
+                        }
+                    } else {
+                        btn.disabled = false;
+                        btn.style.background = '#0284c7';
+                        btn.innerHTML = `<i class="fa-solid fa-play"></i> Поиск минимума`;
+                        if (data.opt_x.length > 0) {
+                            const finalX = data.opt_x[data.opt_x.length - 1];
+                            statusDiv.innerHTML = `Минимум найден в: X = <span style="color:#22c55e; font-weight:bold;">${finalX.toFixed(4)}</span>`;
+                        } else {
+                            statusDiv.innerText = "Готов к запуску";
+                        }
+                    }
+                }
+            }
+            return;
+        }
+
+        // Стандартные 2D-Графики
         else if (data.labels && data.values) {
             if (!currentChartInstance) {
                 container.innerHTML = `
@@ -304,7 +569,8 @@ function mountChildService(service) {
                 `;
             }
         }
-        // Таблицы
+
+        // Таблицы данных
         else if (data.headers && data.rows) {
             let tableHTML = `<h3 style="text-align: center;">${data.title}</h3><table><thead><tr>`;
             data.headers.forEach(h => tableHTML += `<th style="text-align: center;">${h}</th>`);
@@ -317,6 +583,7 @@ function mountChildService(service) {
             tableHTML += `</tbody></table>`;
             container.innerHTML = tableHTML;
         }
+
         // Серверы Consul
         else if (Array.isArray(data)) {
             let tableHTML = `<h3 style="text-align: center;">Данные Consul</h3><table><thead><tr><th style="text-align: center;">Key</th><th style="text-align: center;">Value</th><th style="text-align: center;">CreateIndex</th></tr></thead><tbody>`;
@@ -479,7 +746,6 @@ function renderParabola(data, container) {
             }
         });
 
-        // Слушатели событий
         document.getElementById('paramA').addEventListener('input', function() {
             const val = parseFloat(this.value);
             updateFill(this);
