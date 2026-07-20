@@ -1,6 +1,7 @@
 version: '3.8'
 
 services:
+  # --- РЕГИСТРАТОР / ГЕЙТВЕЙ ---
   gateway_registry:
     build:
       context: .
@@ -12,3 +13,174 @@ services:
     ports:
       - "8000:8000"
     command: uvicorn servers.gateway_registry.gateway_registry:app --host 0.0.0.0 --port 8000 --reload
+
+  # --- СЕРВИСЫ ОПТИМИЗАЦИИ (optimization_functions) ---
+  3d_bukin_service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - .:/app
+    environment:
+      - PYTHONPATH=/app/servers
+    ports:
+      - "8505:8505"
+    command: uvicorn servers.optimization_functions.3d_Bukin_function:app --host 0.0.0.0 --port 8505 --reload
+
+  3d_rastrigin_service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - .:/app
+    environment:
+      - PYTHONPATH=/app/servers
+    ports:
+      - "8506:8506"
+    command: uvicorn servers.optimization_functions.3d_Rastrigin_function:app --host 0.0.0.0 --port 8506 --reload
+
+  3d_rosenbrock_service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - .:/app
+    environment:
+      - PYTHONPATH=/app/servers
+    ports:
+      - "8507:8507"
+    command: uvicorn servers.optimization_functions.3d_Rosenbrock_function:app --host 0.0.0.0 --port 8507 --reload
+
+  3d_schwefel_service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - .:/app
+    environment:
+      - PYTHONPATH=/app/servers
+    ports:
+      - "8508:8508"
+    command: uvicorn servers.optimization_functions.3d_Schwefel_function:app --host 0.0.0.0 --port 8508 --reload
+
+  3d_sin_service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - .:/app
+    environment:
+      - PYTHONPATH=/app/servers
+    ports:
+      - "8509:8509"
+    command: uvicorn servers.optimization_functions.3d_sin:app --host 0.0.0.0 --port 8509 --reload
+
+  # --- СЕРВИСЫ ГРАФИКИ (server_graphics) ---
+  newton_2d_service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - .:/app
+    environment:
+      - PYTHONPATH=/app/servers
+    ports:
+      - "8305:8305"
+    command: uvicorn servers.server_graphics.newton_2d:app --host 0.0.0.0 --port 8305 --reload
+
+  newton_3d_service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - .:/app
+    environment:
+      - PYTHONPATH=/app/servers
+    ports:
+      - "8306:8306"
+    command: uvicorn servers.server_graphics.newton_3d:app --host 0.0.0.0 --port 8306 --reload
+
+  parabola_service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - .:/app
+    environment:
+      - PYTHONPATH=/app/servers
+    ports:
+      - "8101:8101"
+    command: uvicorn servers.server_graphics.parabola:app --host 0.0.0.0 --port 8101 --reload
+
+  parabola_dynamic_service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - .:/app
+    environment:
+      - PYTHONPATH=/app/servers
+    ports:
+      - "8103:8103"
+    command: uvicorn servers.server_graphics.parabola_service:app --host 0.0.0.0 --port 8103 --reload
+
+  tahometr_service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - .:/app
+    environment:
+      - PYTHONPATH=/app/servers
+    ports:
+      - "8001:8001"
+    command: uvicorn servers.server_graphics.tahometr:app --host 0.0.0.0 --port 8001 --reload
+
+  temperature_boiler_service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - .:/app
+    environment:
+      - PYTHONPATH=/app/servers
+    ports:
+      - "8102:8102"
+    command: uvicorn servers.server_graphics.temperature_boiler:app --host 0.0.0.0 --port 8102 --reload
+
+  temperature_sensor_service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - .:/app
+    environment:
+      - PYTHONPATH=/app/servers
+    ports:
+      - "8002:8002"
+    command: uvicorn servers.server_graphics.tempurature_sensor:app --host 0.0.0.0 --port 8002 --reload
+
+  trubka_pito_service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - .:/app
+    environment:
+      - PYTHONPATH=/app/servers
+    ports:
+      - "8003:8003"
+    command: uvicorn servers.server_graphics.trubka_Pito:app --host 0.0.0.0 --port 8003 --reload
+
+  # --- СЕРВИСЫ ТАБЛИЦ (server_tables) ---
+  measurements_table_service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - .:/app
+    environment:
+      - PYTHONPATH=/app/servers
+    ports:
+      - "8008:8008"
+    command: uvicorn servers.server_tables.table_service:app --host 0.0.0.0 --port 8008 --reload
