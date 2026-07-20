@@ -47,7 +47,9 @@ async def websocket_endpoint(websocket: FastWebSocket):
                 "headers": ["ID", "Величина", "Значение"],
                 "rows": [
                     [1, "Температура", f"{random.randint(0, 100)} гр. Цельсия"],
-                    [2, "Давление", f"{random.randint(750, 800)} мм рт.ст."]
+                    [2, "Давление", f"{random.randint(750, 800)} мм рт.ст."],
+                    [3, "Влажность", f"{random.randint(30, 80)}%"],
+                    [4, "Освещенность", f"{random.randint(100, 1000)} лк"]
                 ]
             }
             await websocket.send_json(data)
