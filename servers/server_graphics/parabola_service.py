@@ -11,14 +11,14 @@ PARABOLA_META = {
     "path": "/dynamic_parabola_2",
     "name": "Управляемая парабола",
     "icon": "fa-line-chart",
-    "ws_url": f"ws://localhost:{PORT}/ws",
+    "ws_url": f"ws://153.80.245.239:{PORT}/ws",
 }
 
 current_params = {"a": 1.0, "b": 0.0, "c": 0.0}
 
 
 async def connection():
-    uri = "ws://127.0.0.1:8000/ws/backend"
+    uri = "ws://153.80.245.239:8000/ws/backend"
     while True:
         try:
             async with websockets.connect(uri) as websocket:

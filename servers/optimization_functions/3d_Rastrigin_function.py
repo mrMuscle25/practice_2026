@@ -15,12 +15,12 @@ SERVICE_METADATA = {
     "name": "3d-функция Растригина",
     "path": "/3d-visualizer_2",
     "icon": "fa-cube",
-    "ws_url": f"ws://localhost:{PORT}/ws",
+    "ws_url": f"ws://153.80.245.239:{PORT}/ws",
     "type": "3d_chart"
 }
 
 async def keep_registry_connection():
-    uri = "ws://localhost:8000/ws/backend"
+    uri = "ws://153.80.245.239:8000/ws/backend"
     while True:
         try:
             async with websockets.connect(uri) as websocket:
@@ -110,4 +110,4 @@ async def websocket_endpoint(websocket: FastWebSocket):
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="127.0.0.1", port=PORT)
+    uvicorn.run(app, host="0.0.0.0", port=PORT)

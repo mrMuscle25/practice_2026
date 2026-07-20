@@ -13,11 +13,11 @@ TACHOMETER_META = {
     "path": "/charts_1",
     "name": "График показателей тахометра (обороты двигателя в минуту)",
     "icon": "fa-line-chart",
-    "ws_url": f"ws://localhost:{PORT}/ws"
+    "ws_url": f"ws://153.80.245.239:{PORT}/ws"
 }
 
 async def connection():
-    uri = "ws://localhost:8000/ws/backend"
+    uri = "ws://153.80.245.239:8000/ws/backend"
     while True:
         try:
             async with websockets.connect(uri) as websocket:

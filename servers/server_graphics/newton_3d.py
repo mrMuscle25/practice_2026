@@ -16,7 +16,7 @@ SERVICE_META = {
     "path": "/newton_3d_optimization",
     "name": "Оптимизация методом Ньютона в 3D",
     "icon": "fa-cube",
-    "ws_url": f"ws://localhost:{PORT}/ws",
+    "ws_url": f"ws://153.80.245.239:{PORT}/ws",
     "type": "newton_3d"
 }
 
@@ -40,7 +40,7 @@ def hessian(x: float, y: float):
 
 
 async def keep_registry_connection():
-    uri = "ws://127.0.0.1:8000/ws/backend"
+    uri = "ws://153.80.245.239:8000/ws/backend"
     while True:
         try:
             async with websockets.connect(uri) as websocket:
@@ -165,4 +165,4 @@ async def run_newton_3d(websocket: WebSocket, x_start: float, y_start: float, st
 if __name__ == "__main__":
     import uvicorn
 
-    uvicorn.run(app, host="127.0.0.1", port=PORT)
+    uvicorn.run(app, host="0.0.0.0", port=PORT)

@@ -13,12 +13,12 @@ SENSOR_META = {
     "path": "/boiler-sensor",
     "name": "Датчик температуры бойлера (°C)",
     "icon": "fa-thermometer-half",
-    "ws_url": f"ws://localhost:{PORT}/ws"
+    "ws_url": f"ws://153.80.245.239:{PORT}/ws"
 }
 
 
 async def keep_registry_connection():
-    uri = "ws://127.0.0.1:8000/ws/backend"
+    uri = "ws://153.80.245.239:8000/ws/backend"
     while True:
         try:
             async with websockets.connect(uri) as websocket:
