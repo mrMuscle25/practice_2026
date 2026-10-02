@@ -72,19 +72,12 @@ function connectToRegistry() {
             const stillExists = routingMap.some(srv => srv.path === currentPath);
 
             if (!stillExists && currentPath) {
-                if (routingMap.length > 0) {
-                    window.location.hash = routingMap[0].path;
-                } else {
-                    window.location.hash = '';
-                    router();
-                }
+                window.location.hash = routingMap.length > 0 ? routingMap[0].path : '';
             }
-            else if (wasNetworkEmpty && routingMap.length > 0) {
+            else if (wasNetworkEmpty && routingMap.length > 0 && !currentPath) {
                 window.location.hash = routingMap[0].path;
             }
-            else {
-                router();
-            }
+            router();
         }
     };
 
@@ -146,7 +139,8 @@ function router() {
         return;
     }
 
-    if (currentWebSocket && currentWebSocket.url === service.ws_url) return;
+    if (currentWebSocket && currentWebSocket.url === service.ws_url &&
+        currentWebSocket.readyState <= WebSocket.OPEN) return;
 
     cleanupCurrentView();
     document.getElementById('page-title').innerText = service.name;
@@ -187,7 +181,15 @@ function cleanupCurrentView() {
 
 function mountChildService(service) {
     const container = document.getElementById('router-view');
-    currentWebSocket = new WebSocket(service.ws_url);
+    const socket = new WebSocket(service.ws_url);
+    currentWebSocket = socket;
+
+    socket.onclose = () => {
+        if (currentWebSocket !== socket || !isRegistryOnline) return;
+        setTimeout(() => {
+            if (currentWebSocket === socket && isRegistryOnline) router();
+        }, 2000);
+    };
 
     currentWebSocket.onmessage = (event) => {
         if (!isRegistryOnline) return;
