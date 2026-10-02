@@ -7,7 +7,7 @@ from fastapi import FastAPI, WebSocket as FastWebSocket, WebSocketDisconnect
 import websockets
 
 logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger("3d-sin")
+logger = logging.getLogger("3d-rosenbrock")
 
 PORT = 8507
 
@@ -53,8 +53,6 @@ def generate_sin(a, b):
        y = np.linspace(y_min, y_max, resolution)
        X, Y = np.meshgrid(x, y)
        Z = (a - X)**2 + b * (Y - X**2)**2
-       # Опционально: обрезаем слишком большие значения для лучшего отображения
-       # Z = np.clip(Z, None, max_z)
        return {
            "a": a,
            "b": b,
@@ -96,15 +94,15 @@ async def websocket_endpoint(websocket: FastWebSocket):
     try:
         while state["active"]:
             for i in range(1000):
-                a = 0.0 + i * 0.02          # a от 0 до 2
-                b = 10 ** (0.0 + i * 0.02)  # b от 1 до 100 (логарифмически)
+                a = 0.0 + i * 0.02
+                b = 10 ** (0.0 + i * 0.02)
                 response_data = generate_sin(a, b)
                 await websocket.send_json(response_data)
                 await asyncio.sleep(0.005)
             await asyncio.sleep(0.05)
             for i in range(1000, -1, -1):
-                a = 0.0 + i * 0.02          # a от 0 до 2
-                b = 10 ** (0.0 + i * 0.02)  # b от 1 до 100 (логарифмически)
+                a = 0.0 + i * 0.02
+                b = 10 ** (0.0 + i * 0.02)
                 response_data = generate_sin(a, b)
                 await websocket.send_json(response_data)
                 await asyncio.sleep(0.005)

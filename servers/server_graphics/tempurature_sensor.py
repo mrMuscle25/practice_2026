@@ -101,7 +101,7 @@ async def generate_data(app_data, stop):
         else:
             pass
 
-        noise = random.normalvariate(0, 0.5)   # амплитуда в градусах
+        noise = random.normalvariate(0, 0.5)
         raw_temp = temp + noise
 
         filtered_temp = (1 - alpha) * filtered_temp + alpha * raw_temp
@@ -137,7 +137,6 @@ async def websocket_endpoint(websocket: FastWebSocket):
     await websocket.accept()
     try:
         while True:
-            # Получаем данные температуры
             time_vals = getattr(websocket.app.state, "temp_time", [])
             temp_vals = getattr(websocket.app.state, "temp_values", [])
             stats = getattr(websocket.app.state, "chart_stats", {"mo": 0, "sko": 0, "skz": 0, "min": 0, "max": 0})

@@ -7,7 +7,7 @@ from fastapi import FastAPI, WebSocket as FastWebSocket, WebSocketDisconnect
 import websockets
 
 logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger("3d-sin")
+logger = logging.getLogger("3d-schwefel")
 
 PORT = 8508
 
